@@ -186,9 +186,10 @@ class OptimizationAttack:
                 total_reward = self.env.custom_env.total_true_reward
 
             # Keep Track of Best Found Reward
-            # If environment has a done condition, simulate forward to see if environment will reach a   
             if total_reward < self.best_reward and not self.done:
                 if self.name == "Ant" or self.name == "Half Cheetah":
+                    # For non-safety critical envs, simulate forward to see if the environment will reach a "bad" state
+                    # (done condition = True) and try to avoid those (will allow us to find the backwards-moving behaviors) 
                     flag = False
                     for i in range(self.time_horizon):
                         action = self.env.predict(obs)
