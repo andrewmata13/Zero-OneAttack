@@ -1,0 +1,87 @@
+import gym
+import time
+import pickle
+import sys
+import os
+import random
+from stable_baselines3 import PPO, DQN, A2C
+import torch
+from torch import nn
+from torch.nn import functional as F
+from collections import OrderedDict
+import numpy as np
+import matplotlib
+from matplotlib import pyplot as plt
+from graphviz import Digraph
+from copy import deepcopy
+
+import mujoco_py
+
+sys.path.insert(0,'..')
+sys.path.insert(1,'../..')
+
+from other_attacks.optimal_attack.policy_gradients.models import CtsPolicy, CtsLSTMPolicy
+
+class ExtendedHopper():
+    def __init__(self, network, custom_env):
+        self.network = network
+        self.custom_env = custom_env
+        
+    def reset(self, uState, attributes=None):
+        state = self.custom_env.reset(uState, attributes, name="Hopper")
+        return state
+
+    def _get_obs(self):
+        qpos = self.custom_env.env.sim.data.qpos
+        qvel = self.custom_env.env.sim.data.qvel
+        return np.concatenate([qpos, qvel]).ravel()
+
+    def step(self, action, change_filter=False):
+        return self.custom_env.step(action, change_filter)
+
+    def predict(self, state):
+        stateTensor = torch.tensor(state).type(torch.FloatTensor).unsqueeze(0)
+        action_pds = self.network(stateTensor)
+        return torch.clamp(action_pds[0], min=-1, max=1).detach().numpy()
+
+
+class Hopper:
+    def __init__(self, model="PPO"):
+        self.bounds = [
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5]
+       ]
+
+        if model == "PPO":
+            self.checkpoint = torch.load("../envs/Hopper/Hopper_PPO.model")
+            #self.checkpoint = torch.load("policy_gradients/Hopper/Hopper_PPO.model")
+            self.model = CtsPolicy(11, 3, "orthogonal")
+        elif model == "ATLA":
+            self.checkpoint = torch.load("../envs/Hopper/Hopper_ATLA.model")
+            #self.checkpoint = torch.load("policy_gradients/Hopper/Hopper_ATLA.model")
+            self.model = CtsPolicy(11, 3, "orthogonal")
+        else:
+            exit("Enter valid model choice(PPO or ATLA)")
+            
+        #Load model
+        self.model.load_state_dict(self.checkpoint['policy_model'])
+        self.model.log_stdev.data[:] = -100
+        self.model.eval()
+
+        #Load environment
+        self.custom_env = self.checkpoint['envs'][0]
+        self.env = ExtendedHopper(self.model, self.custom_env)
+
+        self.actionBounds = [[-1, 1], [-1, 1], [-1, 1]]
+        self.name = "Hopper"
+        self.usesCustom = True
+

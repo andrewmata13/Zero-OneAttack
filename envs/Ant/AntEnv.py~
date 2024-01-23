@@ -1,0 +1,199 @@
+import gym
+import time
+import pickle
+import sys
+import os
+import random
+from stable_baselines3 import PPO, DQN, A2C
+import torch
+from torch import nn
+from torch.nn import functional as F
+from collections import OrderedDict
+import numpy as np
+import matplotlib
+from matplotlib import pyplot as plt
+from graphviz import Digraph
+from copy import deepcopy
+
+import mujoco_py
+
+sys.path.insert(0,'..')
+sys.path.insert(1,'../..')
+
+from envs.Ant.policy_gradients.torch_utils import ZFilter, Identity
+
+from other_attacks.optimal_attack.policy_gradients.models import CtsPolicy, CtsLSTMPolicy
+
+class ExtendedAnt():
+    def __init__(self, network, custom_env):
+        self.network = network
+        self.custom_env = custom_env
+
+        
+    def reset(self, node):
+        state = self.custom_env.reset()
+
+        if isinstance(node, (np.ndarray, list)):
+            return state
+
+        if node == None:
+            return state
+        for action in node.recreateActions:
+            stateTensor = torch.tensor(state).type(torch.FloatTensor).unsqueeze(0)
+            action_pds = self.network(stateTensor)
+            state, reward, done, _ = self.custom_env.step(action)
+            
+        return state
+
+    def _get_obs(self):
+        qpos = self.env.sim.data.qpos
+        qvel = self.env.sim.data.qvel
+        return np.concatenate([qpos, qvel]).ravel()
+
+    def step(self, action):
+        return self.custom_env.step(action)
+
+    def predict(self, state):
+        stateTensor = torch.tensor(state).type(torch.FloatTensor).unsqueeze(0)
+        action_pds = self.network(stateTensor)
+        return torch.clamp(action_pds[0], min=-1, max=1).detach().numpy()
+
+
+class Ant:
+    def __init__(self, model="PPO"):
+        self.bounds = [
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5],
+            [-5, 5]
+        ]
+
+        if model == "PPO":
+            self.checkpoint = torch.load("../envs/Ant/Ant_PPO.model")
+            self.model = CtsPolicy(111, 8, "orthogonal")
+        elif model == "ATLA":
+            self.checkpoint = torch.load("../envs/Ant/Ant_ATLA.model")
+            self.model = CtsPolicy(111, 8, "orthogonal")
+        else:
+            exit("Enter valid model choice(PPO or ATLA)")
+            
+        #Load model
+        self.model.load_state_dict(self.checkpoint['policy_model'])
+        self.model.log_stdev.data[:] = -100
+        self.model.eval()
+
+        #Load environment
+        self.custom_env = self.checkpoint['envs'][0]
+        self.env = ExtendedAnt(self.model, self.custom_env)
+
+        self.actionBounds = [[-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1]]
+        self.name = "Ant"
+        self.usesCustom = True
+
