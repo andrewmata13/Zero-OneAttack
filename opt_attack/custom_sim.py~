@@ -1,0 +1,10 @@
+import numpy as np
+
+from optimization_attack import OptimizationAttack
+
+from envs.HalfCheetah.CheetahEnv import HalfCheetah
+from envs.Hopper.Hopper import Hopper
+from envs.Walker2D.Walker2DEnv import Walker2D
+from envs.Ant.AntEnv import Ant
+
+environments = [HalfCheetah, Hopper, Walker2D, Ant]
