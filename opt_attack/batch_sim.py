@@ -21,14 +21,21 @@ eps = 0.15
 num_iter = 2
 step_size = 0.15
 time_horizon = 20
-maxlen = 1000
+maxlen = 20
 
 PPO_attack = OptimizationAttack(environment, start_state, eps, num_iter, step_size, time_horizon, maxlen, net_type1)
 ATLA_attack = OptimizationAttack(environment, start_state, eps, num_iter, step_size, time_horizon, maxlen, net_type2)
 LSTM_attack = OptimizationAttack(environment, start_state, eps, num_iter, step_size, time_horizon, maxlen, net_type3)
 
+# For Testing
 PPO_attack.generate(num_traj=1)
 PPO_attack.save_attack("Adv_Traj/Cheetah_PPO_Test")
+
+PPO_attack.load_attack("Adv_Traj/Cheetah_PPO_Test")
+PPO_attack.check_trajectory(PPO_attack.adv_trajs[0], render=True)
+
+#PPO_attack.generate(num_traj=10)
+#PPO_attack.save_attack("Adv_Traj/Cheetah_PPO_PPO_Simulations")
 
 #ATLA_attack.generate(num_traj=10)
 #ATLA_attack.save_attack("Adv_Traj/Cheetah_ATLA_Simulations")

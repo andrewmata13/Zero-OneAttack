@@ -38,7 +38,7 @@ class ExtendedHopper():
         return np.concatenate([qpos, qvel]).ravel()
 
     def step(self, action, change_filter=False, time_step=None):
-        return self.custom_env.step(action, change_filter, name="Hopper", time_step=time_step)
+        return self.custom_env.step(action[0], change_filter, name="Hopper", time_step=time_step)
 
     def predict(self, state):
         stateTensor = torch.tensor(state).type(torch.FloatTensor).unsqueeze(0)

@@ -227,7 +227,6 @@ class OptimizationAttack:
                         self.best_delay = timing
                     
             self.done = False
-
             self.numSim += 1
             
             #print(total_reward)
