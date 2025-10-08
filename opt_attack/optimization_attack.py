@@ -64,6 +64,10 @@ class OptimizationAttack:
         # Constants for PGD Attack
         self.MIN_BOUND = -1000
         self.MAX_BOUND = 1000
+
+        # Amount of Gaussian Smoothing
+        self.input_noise_std = 0.1
+        self.eot_samples = 100
         
     def optimize(self, current_state, env_attr):
         # Keep Track of Best Actions/Rewards Found in Optimizer
@@ -98,9 +102,26 @@ class OptimizationAttack:
             # Reset Model Hidden State to Beginning Hidden State
             if self.net_type == "LSTM":
                 self.env.network.hidden = deepcopy(self.current_hidden)
-            
+
+            if self.input_noise_std > 0:
+                def noisy_predict(x):
+                    outs = []
+                    for _ in range(self.eot_samples):
+                        xn = x + self.input_noise_std * torch.randn_like(x)
+                        outs.append(self.pgdModel(xn))
+                    return torch.stack(outs, dim=0).mean(0)
+                predict_for_pgd = noisy_predict
+            else:
+                predict_for_pgd = self.pgdModel
+                
             # Initialize PGD Attack
-            attack = PGDAttack(self.pgdModel, eps=self.eps, nb_iter=self.num_iter, eps_iter=self.step_size, clip_min=self.MIN_BOUND, clip_max=self.MAX_BOUND)
+            attack = PGDAttack(predict_for_pgd,
+                eps=self.eps,
+                nb_iter=self.num_iter,
+                eps_iter=self.step_size,
+                clip_min=self.MIN_BOUND,
+                clip_max=self.MAX_BOUND
+            )
 
             # Separate timing params from action params
             opt_actions = []
@@ -272,7 +293,7 @@ class OptimizationAttack:
         for i in range(len(actions)):
             # Compute Noise to Check within Noise Cap
             adv = adv_states[i]
-            print(obs, adv)
+            #print(obs, adv)
             noise = calculateError(np.array(obs), adv, self.bounds)
             print("Noise Found:", noise)
 

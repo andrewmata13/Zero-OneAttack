@@ -8,13 +8,13 @@ from envs.Walker2D.Walker2DEnv import Walker2D
 from envs.Ant.AntEnv import Ant
 
 # Parameters you can change
-environments = [HalfCheetah, Hopper, Walker2D, Ant]
-net_types = ["PPO", "ATLA", "LSTM"]
-attack_types = ["state", "time", "state+time"]
-num_traj = 10
+environments = [HalfCheetah]
+net_types = ["PPO"]
+attack_types = ["state"]
+num_traj = 1
 
 # Important: Number of simulations for zeroth order optimizer, will dictate runtime heavily
-attack_budget = 10
+attack_budget = 1000
 
 # Will contain the adv trajectories where the keys are (env, network type, attack type)
 adversarial_trajectories = {}
@@ -44,3 +44,4 @@ for environment in environments:
             )
             attack_obj.generate(num_traj=num_traj)
             adversarial_trajectories[(environment, net_type, attack_type)] = attack_obj.adv_trajs
+            
