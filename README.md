@@ -23,7 +23,7 @@ These attacks help study the safety and robustness of reinforcement learning age
 
 ## Running the Attack
 
-A typical workflow for running the attack is:
+For running the attack:
 
 1. Load a trained controller.
 2. Configure attack parameters and perturbation bounds.
