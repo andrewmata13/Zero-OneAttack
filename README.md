@@ -14,9 +14,29 @@ The attack can target:
 
 - Observation perturbations
 - Activation time perturbations
-- Combined state-time perturbations
+- Combined obs-time perturbations
 
 These attacks help study the safety and robustness of reinforcement learning agents operating in closed-loop environments.
+
+<table>
+  <tr>
+    <td align="center">
+      <b>Clean</b><br>
+      <img src="gifs/clean.gif" width="250"/><br>
+      <sub>No perturbation applied</sub>
+    </td>
+    <td align="center">
+      <b>Zhang's Attack</b><br>
+      <img src="gifs/zhang.gif" width="250"/><br>
+      <sub>Previous best attack</sub>
+    </td>
+    <td align="center">
+      <b>Zero-One Attack</b><br>
+      <img src="gifs/zero_one_attack.gif" width="250"/><br>
+      <sub>Our observation perturbation attack</sub>
+    </td>
+  </tr>
+</table>
 
 ---
 
