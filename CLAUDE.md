@@ -3,7 +3,8 @@
 Adversarial attack on RL locomotion controllers (Zhang et al. victims: HalfCheetah,
 Hopper, Walker2D, Ant; PPO/ATLA/LSTM). Published as ICCPS 2024. This guide is the
 entry point for continuing the **speed/retraining** work, especially the JAX/MJX
-GPU port. Durable findings also live in the auto-memory (see MEMORY.md there).
+GPU port. Detailed rationale behind each decision is in opt_attack/notes/ (start at
+notes/INDEX.md) — these travel with the repo.
 
 ## The method in one paragraph
 Receding-horizon attack. An OUTER zeroth-order search proposes a *target action
@@ -40,7 +41,7 @@ budget x maxlen candidate-steps.
 5. **Falsified ideas (do not retry):** block/basis parameterization (88% ceiling),
    early abandonment, learned student, terminal value function, SA-RL prior,
    reachable-box defence metric, one-shot learned-dynamics hybrid, corner targets,
-   front-loaded budget (rejected from experience). See memory zero-one-ideas-ledger.
+   front-loaded budget (rejected from experience). Full numbers: notes/zero-one-ideas-ledger.md.
 
 ## Best config + reference (Cheetah PPO, maxlen 1000, budget 1500)
 Zhang -652.9 | archived -1336.5 | SRACOS legacy_norand -1563.9 | **CEM -1922.3** |
@@ -109,3 +110,4 @@ retraining 2000 episodes ~1-3 h. Serial floor per trajectory = maxlen*generation
 - run_attack.py  CLI + PASS/FAIL vs target bar.
 - hybrid.py value.py student.py  falsified approaches (kept, unused).
 - envs/*/  victim wrappers; sim_suite/Adv_Traj/  saved traces.
+- notes/  session findings & rationale (INDEX.md + 8 topic notes), self-contained.
