@@ -39,8 +39,8 @@ class Hopper:
         self.bounds = [[-5, 5]]*11
 
         # Define and load model and optimal attack models
-        self.model = CtsPolicy(111, 8, "orthogonal")
-        self.attack_model = CtsPolicy(111, 111, "orthogonal")
+        self.model = CtsPolicy(11, 3, "orthogonal")
+        self.attack_model = CtsPolicy(11, 11, "orthogonal")
         
         if model == "PPO":
             self.checkpoint = torch.load("envs/Hopper/Hopper_PPO.model")
